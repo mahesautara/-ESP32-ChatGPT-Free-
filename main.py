@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 
 # Set your OpenAI API key from an environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("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")
 
 @app.route('/get_chatgpt_response', methods=['POST'])
 def get_chatgpt_response():
