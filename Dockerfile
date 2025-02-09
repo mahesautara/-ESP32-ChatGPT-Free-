@@ -32,17 +32,16 @@ RUN apt-get update && apt-get install -y \
     chromium-browser \
     chromium-chromedriver
 
-# Set environment variable for PyAutoGUI
-ENV DISPLAY=:99
-
 # Create a virtual environment for Python
 RUN python3 -m venv /app/venv
 
 # Activate the virtual environment & install Python packages
-RUN /app/venv/bin/pip install --upgrade pip
-RUN /app/venv/bin/pip install flask pyautogui pyperclip gtts selenium
+RUN /app/venv/bin/pip install --no-cache-dir flask pyautogui pyperclip gtts selenium
 
-# Set up a working directory
+# Set environment variable for PyAutoGUI
+ENV DISPLAY=:99
+
+# Set working directory
 WORKDIR /app
 
 # Copy all files into the container
