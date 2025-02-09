@@ -47,5 +47,5 @@ WORKDIR /app
 # Copy all files into the container
 COPY . /app
 
-# Run Xvfb (virtual screen) and start Flask server inside virtual environment
-CMD ["bash", "-c", "Xvfb :99 -screen 0 1024x768x16 & /app/venv/bin/python main.py"]
+# Ensure any previous Xvfb lock is removed before starting
+CMD ["bash", "-c", "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1024x768x16 & /app/venv/bin/python main.py"]
