@@ -1,13 +1,19 @@
 import os
 import subprocess
 
-# Start Xvfb (Virtual Display) with access control disabled (-ac)
-subprocess.Popen(["Xvfb", ":99", "-ac", "-screen", "0", "1024x768x16"])
-# Set the DISPLAY environment variable so GUI-based modules know which display to use
+# Check if Xvfb is already running on display :99 by looking for the lock file.
+if not os.path.exists("/tmp/.X99-lock"):
+    # Start Xvfb (Virtual Display) with access control disabled (-ac)
+    subprocess.Popen(["Xvfb", ":99", "-ac", "-screen", "0", "1024x768x16"])
+    print("Started Xvfb on display :99")
+else:
+    print("Xvfb already running on display :99.")
+
+# Set the DISPLAY environment variable so that GUI-based modules know which display to use.
 os.environ["DISPLAY"] = ":99.0"
 
 # Ensure that an empty .Xauthority file exists to satisfy Xlib's requirements.
-# This prevents warnings like: "Xlib.xauth: warning, no xauthority details available"
+# This helps to prevent warnings like: "Xlib.xauth: warning, no xauthority details available"
 xauth_file = os.path.expanduser("~/.Xauthority")
 if not os.path.exists(xauth_file):
     with open(xauth_file, "w") as f:
@@ -34,7 +40,7 @@ def get_chatgpt_response():
     # Wait for ChatGPT to generate a response (adjust this delay as needed)
     time.sleep(10)
 
-    # Click to focus on the ChatGPT response area (coordinates may need adjustment)
+    # Click to focus on the ChatGPT response area (adjust coordinates as necessary)
     pyautogui.click(x=629, y=331)
     time.sleep(1)
 
@@ -54,7 +60,7 @@ def get_chatgpt_response():
         copied_text = pyperclip.paste().strip()
         print(f"DEBUG: Copied Text: '{copied_text}'")
 
-        # If the text is empty or already captured, break the loop
+        # If the copied text is empty or already captured, break the loop
         if copied_text in chat_response or copied_text == "":
             break
 
@@ -74,7 +80,8 @@ def get_chatgpt_response():
 @app.route('/audio')
 def serve_audio():
     """
-    Serves the generated MP3 file (response.mp3) so clients can play the audio.
+    Serves the generated MP3 file (response.mp3) so that clients (e.g., an ESP32)
+    can play the audio.
     """
     return send_file("response.mp3", mimetype="audio/mpeg")
 
