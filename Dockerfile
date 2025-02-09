@@ -50,4 +50,4 @@ WORKDIR /app
 COPY . /app
 
 # Ensure any previous Xvfb lock is removed before starting
-CMD ["bash", "-c", "rm -f /tmp/.X99-lock && xauth generate $DISPLAY . trusted && Xvfb :99 -screen 0 1024x768x16 & /app/venv/bin/python main.py"]
+CMD ["bash", "-c", "rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 && Xvfb :99 -ac -screen 0 1024x768x16 & sleep 2 && export DISPLAY=:99 && /app/venv/bin/python main.py"]
