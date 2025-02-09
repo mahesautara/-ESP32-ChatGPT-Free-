@@ -4,6 +4,7 @@ FROM ubuntu:latest
 # Update package list & install system dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
+    python3-venv \
     python3-pip \
     xvfb \
     x11-utils \
@@ -34,9 +35,12 @@ RUN apt-get update && apt-get install -y \
 # Set environment variable for PyAutoGUI
 ENV DISPLAY=:99
 
-# Install Python libraries
-RUN pip3 install --upgrade pip
-RUN pip3 install flask pyautogui pyperclip gtts selenium
+# Create a virtual environment for Python
+RUN python3 -m venv /app/venv
+
+# Activate the virtual environment & install Python packages
+RUN /app/venv/bin/pip install --upgrade pip
+RUN /app/venv/bin/pip install flask pyautogui pyperclip gtts selenium
 
 # Set up a working directory
 WORKDIR /app
@@ -44,5 +48,5 @@ WORKDIR /app
 # Copy all files into the container
 COPY . /app
 
-# Run Xvfb (virtual screen) and start Flask server
-CMD ["bash", "-c", "Xvfb :99 -screen 0 1024x768x16 & python3 main.py"]
+# Run Xvfb (virtual screen) and start Flask server inside virtual environment
+CMD ["bash", "-c", "Xvfb :99 -screen 0 1024x768x16 & /app/venv/bin/python main.py"]
