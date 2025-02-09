@@ -1,19 +1,19 @@
 import os
 import subprocess
 
-# Start Xvfb (Virtual Display) with access control disabled
+# Start Xvfb (Virtual Display) with access control disabled (-ac)
 subprocess.Popen(["Xvfb", ":99", "-ac", "-screen", "0", "1024x768x16"])
-
-# Set DISPLAY environment variable so GUI apps know which display to use
+# Set the DISPLAY environment variable so GUI-based modules know which display to use
 os.environ["DISPLAY"] = ":99.0"
 
-# Ensure that the .Xauthority file exists to satisfy Xlib's requirements
+# Ensure that an empty .Xauthority file exists to satisfy Xlib's requirements.
+# This prevents warnings like: "Xlib.xauth: warning, no xauthority details available"
 xauth_file = os.path.expanduser("~/.Xauthority")
 if not os.path.exists(xauth_file):
     with open(xauth_file, "w") as f:
         pass
 
-# Now import the rest of the modules that rely on the virtual display
+# Now import modules that depend on the virtual display
 from flask import Flask, jsonify, send_file
 import pyautogui
 import pyperclip
@@ -24,19 +24,22 @@ app = Flask(__name__)
 
 @app.route('/get_chatgpt_response', methods=['GET'])
 def get_chatgpt_response():
-    """Automates ChatGPT web interface and retrieves response."""
-    
+    """
+    Automates the ChatGPT web interface using pyautogui and pyperclip to capture
+    the response text, converts the text to speech using gTTS, and returns the text as JSON.
+    """
     chat_response = ""
 
     print("Waiting for ChatGPT response...")
-    time.sleep(10)  # Ensure ChatGPT has responded before copying
+    # Wait for ChatGPT to generate a response (adjust this delay as needed)
+    time.sleep(10)
 
-    # Click where ChatGPT's response starts (avoiding the question)
+    # Click to focus on the ChatGPT response area (coordinates may need adjustment)
     pyautogui.click(x=629, y=331)
     time.sleep(1)
 
     while True:
-        # Select a portion of the text response
+        # Simulate mouse drag to select text starting from (629, 331) to (900, 331)
         pyautogui.mouseDown(x=629, y=331)
         time.sleep(0.5)
         pyautogui.moveTo(x=900, y=331)
@@ -47,21 +50,22 @@ def get_chatgpt_response():
         pyautogui.hotkey("ctrl", "c")
         time.sleep(1)
 
+        # Retrieve and clean the copied text
         copied_text = pyperclip.paste().strip()
         print(f"DEBUG: Copied Text: '{copied_text}'")
 
-        # If the copied text is empty or already included, break the loop
+        # If the text is empty or already captured, break the loop
         if copied_text in chat_response or copied_text == "":
             break
 
+        # Append the new text and scroll down a bit to reveal more content
         chat_response += " " + copied_text
-        # Scroll down slightly to reveal additional text if available
         pyautogui.scroll(-5)
         time.sleep(1)
 
     print(f"DEBUG: Full Response: {chat_response}")
 
-    # Convert the full text response to an MP3 using gTTS
+    # Convert the full text response to an MP3 file using gTTS
     tts = gTTS(chat_response, lang="en")
     tts.save("response.mp3")
 
@@ -69,8 +73,11 @@ def get_chatgpt_response():
 
 @app.route('/audio')
 def serve_audio():
-    # Serve the generated audio file
+    """
+    Serves the generated MP3 file (response.mp3) so clients can play the audio.
+    """
     return send_file("response.mp3", mimetype="audio/mpeg")
 
 if __name__ == "__main__":
+    # Run the Flask app on all interfaces at port 8080
     app.run(host="0.0.0.0", port=8080)
