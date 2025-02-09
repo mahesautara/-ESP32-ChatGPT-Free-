@@ -1,16 +1,26 @@
+import os
+import subprocess
+
+# Start Xvfb (Virtual Display) with access control disabled
+subprocess.Popen(["Xvfb", ":99", "-ac", "-screen", "0", "1024x768x16"])
+
+# Set DISPLAY environment variable so GUI apps know which display to use
+os.environ["DISPLAY"] = ":99.0"
+
+# Ensure that the .Xauthority file exists to satisfy Xlib's requirements
+xauth_file = os.path.expanduser("~/.Xauthority")
+if not os.path.exists(xauth_file):
+    with open(xauth_file, "w") as f:
+        pass
+
+# Now import the rest of the modules that rely on the virtual display
 from flask import Flask, jsonify, send_file
 import pyautogui
 import pyperclip
 import time
 from gtts import gTTS
-import os
-import subprocess
 
 app = Flask(__name__)
-
-# Start Xvfb (Virtual Display) with access control disabled
-subprocess.Popen(["Xvfb", ":99", "-ac", "-screen", "0", "1024x768x16"])
-os.environ["DISPLAY"] = ":99.0"
 
 @app.route('/get_chatgpt_response', methods=['GET'])
 def get_chatgpt_response():
@@ -21,7 +31,7 @@ def get_chatgpt_response():
     print("Waiting for ChatGPT response...")
     time.sleep(10)  # Ensure ChatGPT has responded before copying
 
-    # Click where ChatGPT's response starts (Avoids the question)
+    # Click where ChatGPT's response starts (avoiding the question)
     pyautogui.click(x=629, y=331)
     time.sleep(1)
 
@@ -33,25 +43,25 @@ def get_chatgpt_response():
         pyautogui.mouseUp()
         time.sleep(0.5)
 
-        # Copy the selected text to clipboard
+        # Copy the selected text to the clipboard
         pyautogui.hotkey("ctrl", "c")
         time.sleep(1)
 
         copied_text = pyperclip.paste().strip()
         print(f"DEBUG: Copied Text: '{copied_text}'")
 
-        # If the copied text is empty or already included, stop the loop
+        # If the copied text is empty or already included, break the loop
         if copied_text in chat_response or copied_text == "":
             break
 
         chat_response += " " + copied_text
-        # Scroll down slightly to reveal more text if available
+        # Scroll down slightly to reveal additional text if available
         pyautogui.scroll(-5)
         time.sleep(1)
 
     print(f"DEBUG: Full Response: {chat_response}")
 
-    # Convert the full response text to MP3 using gTTS
+    # Convert the full text response to an MP3 using gTTS
     tts = gTTS(chat_response, lang="en")
     tts.save("response.mp3")
 
